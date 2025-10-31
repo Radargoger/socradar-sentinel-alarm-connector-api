@@ -2,15 +2,11 @@
 
 This Azure Logic App solution automatically integrates security events from the **SOCRadar** threat intelligence platform, creating native **Incidents** directly inside your Microsoft Sentinel workspace.
 
----
-
 ## 🚀 Quick Deployment
 
 Click the **Deploy to Azure** button below to create the Logic App and all necessary connections in a single step using the Azure Portal.
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://raw.githubusercontent.com/Radargoger/socradar-sentinel-alarm-connector-api/refs/heads/main/template.json)
-
----
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://github.com/Radargoger/socradar-sentinel-alarm-connector-api/edit/main/readme.md)
 
 ## ⚙️ Solution Architecture & Functionality
 
@@ -33,8 +29,6 @@ The Logic App maps critical SOCRadar data to Sentinel Incident properties:
 | `alarm_risk_level` | **Severity** (`High`, `Medium`, etc.) |
 | `alarm_text` | **Description** |
 | Hardcoded "New" | **Status** |
-
----
 
 ## 📝 Prerequisites
 
