@@ -23,18 +23,18 @@
         "description": "The name for the Azure Sentinel API connection."
       }
     },
-    "azureSentinelConnectionId": {
-      "type": "string",
-      "defaultValue": "/subscriptions/6fc315b1-e624-4ca1-9d8c-288b264ae0a9/resourceGroups/resourceapps/providers/Microsoft.Web/connections/azuresentinel-1",
-      "metadata": {
-        "description": "The resource ID of the existing Azure Sentinel API connection. **UPDATE THIS IF YOU USE A DIFFERENT CONNECTION.**"
-      }
-    },
     "azureSentinelConnectionResourceId": {
       "type": "string",
       "defaultValue": "/subscriptions/6fc315b1-e624-4ca1-9d8c-288b264ae0a9/providers/Microsoft.Web/locations/northeurope/managedApis/azuresentinel",
       "metadata": {
-        "description": "The resource ID of the Azure Sentinel managed API. **UPDATE THIS IF YOU USE A DIFFERENT LOCATION.**"
+        "description": "The resource ID of the Azure Sentinel managed API. Update this if your Sentinel is in a different region."
+      }
+    },
+    "azureSentinelWorkspacePath": {
+      "type": "string",
+      "defaultValue": "/Incidents/subscriptions/6fc315b1-e624-4ca1-9d8c-288b264ae0a9/resourceGroups/resourceapps/workspaces/sentinelworkspace",
+      "metadata": {
+        "description": "The path to the Sentinel Workspace where incidents will be created. IMPORTANT: Update this value."
       }
     }
   },
@@ -74,7 +74,7 @@
                   "status": "New",
                   "description": "@items('For_each')?['alarm_text']"
                 },
-                "path": "/Incidents/subscriptions/6fc315b1-e624-4ca1-9d8c-288b264ae0a9/resourceGroups/resourceapps/workspaces/sentinelworkspace"
+                "path": "[parameters('azureSentinelWorkspacePath')]"
               }
             }
           },
@@ -151,7 +151,7 @@
                         "type": ["string", "null"]
                       },
                       "approved_by": {
-                        "type": ["object", "null"]
+                        "type": ["object", "string", "null"]
                       },
                       "content": {
                         "type": ["object", "null"]
@@ -177,16 +177,16 @@
                       "notification_id": {
                         "type": ["integer", "null"]
                       },
-                        "status": {
-                            "type": ["string", "null"]
-                        },
-                        "tags": {
-                            "type": ["array", "null"]
-                        }
+                      "status": {
+                        "type": ["string", "null"]
+                      },
+                      "tags": {
+                        "type": ["array", "null"]
+                      }
                     },
                     "type": ["object", "null"]
                   },
-                  "type": "array"
+                  "type": ["array", "null"]
                 },
                 "is_success": {
                   "type": ["boolean", "null"]
@@ -198,7 +198,7 @@
                   "type": ["integer", "null"]
                 }
               },
-              "type": "object"
+              "type": ["object", "null"]
             }
           }
         }
