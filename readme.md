@@ -43,3 +43,45 @@ Ensure you have the following information and resources ready before deployment:
 The `Create_incident` action in the Logic App is hardcoded to a specific Sentinel workspace path. **You must update this during or after deployment** to match your environment.
 
 **Example Path Structure:**
+
+/Incidents/subscriptions/{Your-Sub-ID}/resourceGroups/{Your-RG-Name}/workspaces/{Your-Workspace-Name}
+
+## 🚀 Deployment Steps
+
+After clicking the "Deploy to Azure" button, you will be prompted to fill in deployment parameters:
+
+| Parameter Name | Description | Default Value in Template |
+| :--- | :--- | :--- |
+| **Logic App Name** | The desired name for your Logic App. | `SocRadarToSentinelLogicApp` |
+| **Location** | The Azure region to deploy the Logic App to. | `[resourceGroup().location]` |
+| **Azure Sentinel Connection Name** | The name for the Managed API Connection to Sentinel. | `azuresentinel-1` |
+| **Azure Sentinel Connection ID** | The existing Resource ID for your Sentinel connection (if available) or a placeholder. | *Placeholder value - **Needs Update*** |
+| **Azure Sentinel Connection Resource ID** | The Managed API ID for Azure Sentinel in your region. | *Placeholder value - **Needs Update*** |
+
+### Post-Deployment Configuration
+
+1.  Navigate to the deployed Logic App in the Azure Portal.
+2.  Open the **Logic App Designer**.
+3.  **Update the HTTP Action:**
+    * Find the `HTTP` step and click **Edit**.
+    * In the `URI` field, locate `key=...` and replace the placeholder API key with your **actual SOCRadar API Key**.
+4.  **Update the Create Incident Action:**
+    * Find the `Create_incident` step and click **Edit**.
+    * Verify the **Path** field contains the correct Subscription ID, Resource Group Name, and Workspace Name for your Sentinel environment.
+5.  **Save** the Logic App. The workflow will now start running every 3 minutes.
+
+## 🔎 Querying the Data
+
+New SOCRadar alerts will appear as standard incidents in your Microsoft Sentinel portal.
+
+1.  Go to **Microsoft Sentinel**.
+2.  Navigate to the **Incidents** blade.
+3.  You can filter by the Incident Title, which contains the unique SOCRadar alert details.
+
+## 🛑 Troubleshooting
+
+| Problem | Possible Solution |
+| :--- | :--- |
+| **Logic App Runs are "Failed".** | Check the Logic App's **Run History**. If the **HTTP** step fails, verify your **SOCRadar API Key** is correct. |
+| **Logic App is "Succeeded" but No Incidents Appear in Sentinel.** | 1. Check the output of the **Create_incident** step for any authorization errors. 2. Verify that the `Path` field in the **Create_incident** action correctly points to your Sentinel workspace. |
+| **Too many Incidents are being created.** | Adjust the `Recurrence` interval (e.g., from 3 minutes to 5 or 10 minutes) or reduce the `limit=100` parameter in the `HTTP` URI. |
