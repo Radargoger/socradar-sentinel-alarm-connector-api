@@ -6,7 +6,7 @@ This Azure Logic App solution automatically integrates security events from the 
 
 Click the **Deploy to Azure** button below to create the Logic App and all necessary connections in a single step using the Azure Portal.
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://github.com/Radargoger/socradar-sentinel-alarm-connector-api/edit/main/readme.md)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://github.com/Radargoger/socradar-sentinel-alarm-connector-api/blob/main/template.json)
 
 ## ⚙️ Solution Architecture & Functionality
 
