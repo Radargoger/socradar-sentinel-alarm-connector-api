@@ -10,8 +10,6 @@ Click the **Deploy to Azure** button below to create the Logic App and all neces
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://raw.githubusercontent.com/Radargoger/socradar-sentinel-alarm-connector-api/refs/heads/main/template.json)
 
-> **⚠️ ACTION REQUIRED:** Before pushing to GitHub, you must replace the placeholder `YOUR_GITHUB_RAW_TEMPLATE_URL_HERE` with the raw URL of your deployed ARM template file (e.g., `https://raw.githubusercontent.com/Radargoger/socradar-sentinel-alarm-connector/main/azuredeploy.json`).
-
 ---
 
 ## ⚙️ Solution Architecture & Functionality
