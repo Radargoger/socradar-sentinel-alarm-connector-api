@@ -108,92 +108,94 @@
                   "items": {
                     "properties": {
                       "alarm_risk_level": {
-                        "type": "string"
+                        "type": ["string", "null"]
                       },
                       "alarm_text": {
-                        "type": "string"
+                        "type": ["string", "null"]
                       },
                       "alarm_id": {
-                        "type": "integer"
+                        "type": ["integer", "null"]
                       },
                       "alarm_type_details": {
                         "properties": {
                           "alarm_generic_title": {
-                            "type": "string"
+                            "type": ["string", "null"]
                           }
                         },
-                        "type": "object"
+                        "type": ["object", "null"]
                       },
                       "alarm_asset": {
-                        "type": "string"
+                        "type": ["string", "null"]
                       },
                       "alarm_assignees": {
-                        "type": "array"
+                        "type": ["array", "null"]
                       },
                       "alarm_related_assets": {
-                        "type": "array"
+                        "type": ["array", "null"]
                       },
                       "alarm_related_entities": {
                         "items": {
                           "properties": {
                             "key": {
-                              "type": "string"
+                              "type": ["string", "null"]
                             },
                             "value": {
-                              "type": "string"
+                              "type": ["string", "null"]
                             }
                           },
-                          "type": "object"
+                          "type": ["object", "null"]
                         },
-                        "type": "array"
+                        "type": ["array", "null"]
                       },
                       "alarm_response": {
-                        "type": "string"
+                        "type": ["string", "null"]
                       },
-                      "approved_by": {},
+                      "approved_by": {
+                        "type": ["object", "null"]
+                      },
                       "content": {
-                        "type": "object"
+                        "type": ["object", "null"]
                       },
                       "date": {
-                        "type": "string"
+                        "type": ["string", "null"]
                       },
                       "extra": {
-                        "type": "array"
+                        "type": ["array", "null"]
                       },
                       "history": {
-                        "type": "array"
+                        "type": ["array", "null"]
                       },
                       "is_approved": {
-                        "type": "boolean"
+                        "type": ["boolean", "null"]
                       },
                       "last_notification_date": {
-                        "type": "string"
+                        "type": ["string", "null"]
                       },
                       "notes": {
-                        "type": "array"
+                        "type": ["array", "null"]
                       },
                       "notification_id": {
-                        "type": "integer"
+                        "type": ["integer", "null"]
                       },
                         "status": {
-                            "type": "string"
+                            "type": ["string", "null"]
                         },
                         "tags": {
-                            "type": "array"
+                            "type": ["array", "null"]
                         }
                     },
-                    "type": "object"
+                    "type": ["object", "null"]
                   },
                   "type": "array"
                 },
                 "is_success": {
-                  "type": "boolean"
+                  "type": ["boolean", "null"]
                 },
                 "message": {
-                  "type": "string"
+                  "type": ["string", "null"]
                 },
                 "response_code": {
-                  "type": "integer"
+                  "type": ["integer", "null"]
                 }
               },
               "type": "object"
