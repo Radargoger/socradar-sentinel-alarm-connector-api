@@ -1,0 +1,257 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "logicAppName": {
+      "type": "string",
+      "defaultValue": "SocRadarToSentinelLogicApp",
+      "metadata": {
+        "description": "The name of the Logic App to create."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "The location for the Logic App and API connections."
+      }
+    },
+    "azureSentinelConnectionName": {
+      "type": "string",
+      "defaultValue": "azuresentinel-1",
+      "metadata": {
+        "description": "The name for the Azure Sentinel API connection."
+      }
+    },
+    "azureSentinelConnectionId": {
+      "type": "string",
+      "defaultValue": "/subscriptions/6fc315b1-e624-4ca1-9d8c-288b264ae0a9/resourceGroups/resourceapps/providers/Microsoft.Web/connections/azuresentinel-1",
+      "metadata": {
+        "description": "The resource ID of the existing Azure Sentinel API connection. **UPDATE THIS IF YOU USE A DIFFERENT CONNECTION.**"
+      }
+    },
+    "azureSentinelConnectionResourceId": {
+      "type": "string",
+      "defaultValue": "/subscriptions/6fc315b1-e624-4ca1-9d8c-288b264ae0a9/providers/Microsoft.Web/locations/northeurope/managedApis/azuresentinel",
+      "metadata": {
+        "description": "The resource ID of the Azure Sentinel managed API. **UPDATE THIS IF YOU USE A DIFFERENT LOCATION.**"
+      }
+    }
+  },
+  "variables": {
+    "workflowDefinition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "triggers": {
+        "Recurrence": {
+          "recurrence": {
+            "frequency": "Minute",
+            "interval": 3
+          },
+          "evaluatedRecurrence": {
+            "frequency": "Minute",
+            "interval": 3
+          },
+          "type": "Recurrence"
+        }
+      },
+      "actions": {
+        "For_each": {
+          "foreach": "@outputs('Parse_JSON')?['body']?['data']",
+          "actions": {
+            "Create_incident": {
+              "type": "ApiConnection",
+              "inputs": {
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['azuresentinel-1']['connectionId']"
+                  }
+                },
+                "method": "put",
+                "body": {
+                  "title": "@{items('For_each')?['alarm_type_details']?['alarm_generic_title']} @{items('For_each')?['alarm_id']}",
+                  "severity": "@items('For_each')?['alarm_risk_level']",
+                  "status": "New",
+                  "description": "@items('For_each')?['alarm_text']"
+                },
+                "path": "/Incidents/subscriptions/6fc315b1-e624-4ca1-9d8c-288b264ae0a9/resourceGroups/resourceapps/workspaces/sentinelworkspace"
+              }
+            }
+          },
+          "runAfter": {
+            "Parse_JSON": [
+              "Succeeded"
+            ]
+          },
+          "type": "Foreach"
+        },
+        "HTTP": {
+          "runAfter": {},
+          "type": "Http",
+          "inputs": {
+            "uri": "https://platform.socradar.com/api/company/330/incidents/v4?key=cd7f92376d044c03b074c91071b3c12a69b743f511ed4ddf8f88eb1d76694669&limit=100&start_date=[formatDateTime(addMinutes(utcNow(),-3),'yyyy-MM-ddTHH:mm:ssZ')]]",
+            "method": "GET"
+          }
+        },
+        "Parse_JSON": {
+          "runAfter": {
+            "HTTP": [
+              "Succeeded"
+            ]
+          },
+          "type": "ParseJson",
+          "inputs": {
+            "content": "@body('HTTP')",
+            "schema": {
+              "properties": {
+                "data": {
+                  "items": {
+                    "properties": {
+                      "alarm_risk_level": {
+                        "type": "string"
+                      },
+                      "alarm_text": {
+                        "type": "string"
+                      },
+                      "alarm_id": {
+                        "type": "integer"
+                      },
+                      "alarm_type_details": {
+                        "properties": {
+                          "alarm_generic_title": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "alarm_asset": {
+                        "type": "string"
+                      },
+                      "alarm_assignees": {
+                        "type": "array"
+                      },
+                      "alarm_related_assets": {
+                        "type": "array"
+                      },
+                      "alarm_related_entities": {
+                        "items": {
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "alarm_response": {
+                        "type": "string"
+                      },
+                      "approved_by": {},
+                      "content": {
+                        "type": "object"
+                      },
+                      "date": {
+                        "type": "string"
+                      },
+                      "extra": {
+                        "type": "array"
+                      },
+                      "history": {
+                        "type": "array"
+                      },
+                      "is_approved": {
+                        "type": "boolean"
+                      },
+                      "last_notification_date": {
+                        "type": "string"
+                      },
+                      "notes": {
+                        "type": "array"
+                      },
+                      "notification_id": {
+                        "type": "integer"
+                      },
+                        "status": {
+                            "type": "string"
+                        },
+                        "tags": {
+                            "type": "array"
+                        }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "is_success": {
+                  "type": "boolean"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "response_code": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          }
+        }
+      },
+      "outputs": {},
+      "parameters": {
+        "$connections": {
+          "type": "Object",
+          "defaultValue": {}
+        }
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Web/connections",
+      "apiVersion": "2016-06-01",
+      "name": "[parameters('azureSentinelConnectionName')]",
+      "location": "[parameters('location')]",
+      "kind": "V1",
+      "properties": {
+        "api": {
+          "id": "[parameters('azureSentinelConnectionResourceId')]"
+        },
+        "displayName": "AzureSentinel",
+        "parameterValues": {
+          "token": {
+            "value": ""
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2017-07-01",
+      "name": "[parameters('logicAppName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/connections', parameters('azureSentinelConnectionName'))]"
+      ],
+      "properties": {
+        "state": "Enabled",
+        "definition": "[variables('workflowDefinition')]",
+        "parameters": {
+          "$connections": {
+            "value": {
+              "azuresentinel-1": {
+                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('azureSentinelConnectionName'))]",
+                "connectionName": "[parameters('azureSentinelConnectionName')]",
+                "id": "[parameters('azureSentinelConnectionResourceId')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
