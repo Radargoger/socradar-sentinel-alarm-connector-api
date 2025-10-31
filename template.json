@@ -4,183 +4,181 @@
     "parameters": {
         "logicAppName": {
             "type": "string",
-            "metadata": { "description": "Logic App adını girin." }
+            "defaultValue": "SocRadar-Sentinel-Webhook-Flow",
+            "metadata": {
+                "description": "Name of the Logic App workflow."
+            }
         },
-        "location": {
+        "sentinelConnectionName": {
             "type": "string",
-            "defaultValue": "[resourceGroup().location]",
-            "metadata": { "description": "Logic App'in konuşlandırılacağı Azure bölgesi." }
+            "defaultValue": "azuresentinel-1",
+            "metadata": {
+                "description": "Name of the Azure Sentinel API connection."
+            }
         },
-        "socradarCompanyId": {
+        "sentinelApiConnectionDisplayName": {
             "type": "string",
-            "metadata": { "description": "SOCRadar API çağrısı için Şirket ID'si." }
+            "defaultValue": "azuresentinel-connection",
+            "metadata": {
+                "description": "Display name for the Azure Sentinel API connection."
+            }
         },
-        "socradarCompanyKey": {
-            "type": "securestring",
-            "metadata": { "description": "SOCRadar API çağrısı için Şirket Anahtarı." }
-        },
-        "sentinelSubscriptionId": {
+        "sentinelWorkspaceSubscriptionId": {
             "type": "string",
-            "metadata": { "description": "Azure Sentinel çalışma alanının Abonelik Kimliği." }
+            "defaultValue": "6fc315b1-e624-4ca1-9d8c-288b264ae0a9",
+            "metadata": {
+                "description": "Subscription ID where the Sentinel workspace is located."
+            }
         },
-        "sentinelResourceGroup": {
+        "sentinelWorkspaceResourceGroup": {
             "type": "string",
-            "metadata": { "description": "Azure Sentinel çalışma alanının Kaynak Grubu Adı." }
+            "defaultValue": "resourceapps",
+            "metadata": {
+                "description": "Resource Group where the Sentinel workspace is located."
+            }
         },
         "sentinelWorkspaceName": {
             "type": "string",
-            "metadata": { "description": "Azure Sentinel çalışma alanının Adı." }
-        },
-        "azuresentinelConnectionName": {
-            "type": "string",
-            "defaultValue": "azuresentinel",
-            "metadata": { "description": "Azure Sentinel Yönetilen API Bağlantısı adı." }
+            "defaultValue": "sentinelworkspace",
+            "metadata": {
+                "description": "Name of the Azure Sentinel/Log Analytics workspace."
+            }
         }
     },
     "variables": {
-        "azureSentinelConnectionId": "[concat('/subscriptions/', parameters('sentinelSubscriptionId'), '/resourceGroups/', parameters('sentinelResourceGroup'), '/providers/Microsoft.Web/connections/', parameters('azuresentinelConnectionName'))]",
-        "azureSentinelManagedApiId": "[concat('/subscriptions/', parameters('sentinelSubscriptionId'), '/providers/Microsoft.Web/locations/', parameters('location'), '/managedApis/azuresentinel')]",
-        
-        // ARM kısıtlaması nedeniyle Logic App çalışma zamanında çalışacak tarih ifadesini kaçırıyoruz
-        "runtimeDateExpression": "[[formatDateTime(addMinutes(utcNow(),-3),'yyyy-MM-ddTHH:mm:ssZ')]]",
-        
-        // Sentinel Path ifadesini basitleştirip ARM değişkenine atıyoruz
-        "sentinelPath": "[concat('/Incidents/subscriptions/', parameters('sentinelSubscriptionId'), '/resourceGroups/', parameters('sentinelResourceGroup'), '/workspaces/', parameters('sentinelWorkspaceName'))]"
+        "apiServiceId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', resourceGroup().location, '/managedApis/azuresentinel')]",
+        "connectionId": "[resourceId('Microsoft.Web/connections', parameters('sentinelConnectionName'))]"
     },
     "resources": [
         {
             "type": "Microsoft.Web/connections",
-            "apiVersion": "2016-06-01",
-            "name": "[parameters('azuresentinelConnectionName')]",
-            "location": "[parameters('location')]",
+            "apiVersion": "2018-07-01",
+            "name": "[parameters('sentinelConnectionName')]",
+            "location": "[resourceGroup().location]",
             "properties": {
-                "api": { "id": "[variables('azureSentinelManagedApiId')]" },
-                "displayName": "[parameters('azuresentinelConnectionName')]",
-                "parameterValues": {}
+                "api": {
+                    "id": "[variables('apiServiceId')]"
+                },
+                "displayName": "[parameters('sentinelApiConnectionDisplayName')]",
+                "parameterValues": {},
+                "customParameterValues": {}
             }
         },
         {
             "type": "Microsoft.Logic/workflows",
             "apiVersion": "2017-07-01",
             "name": "[parameters('logicAppName')]",
-            "location": "[parameters('location')]",
-            "dependsOn": [ "[resourceId('Microsoft.Web/connections', parameters('azuresentinelConnectionName'))]" ],
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/connections', parameters('sentinelConnectionName'))]"
+            ],
             "properties": {
                 "state": "Enabled",
                 "definition": {
                     "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-                    "actions": {
-                        "For_each": {
-                            "actions": {
-                                "Create_incident": {
-                                    "inputs": {
-                                        "body": {
-                                            "description": "@items('For_each')?['alarm_text']",
-                                            "severity": "@items('For_each')?['alarm_risk_level']",
-                                            "status": "New",
-                                            "title": "@{items('For_each')?['alarm_type_details']?['alarm_generic_title']} @{items('For_each')?['alarm_id']}"
-                                        },
-                                        "host": {
-                                            "connection": { "name": "@parameters('$connections')['azuresentinel']['connectionId']" }
-                                        },
-                                        "method": "put",
-                                        "path": "[variables('sentinelPath')]"
-                                    },
-                                    "type": "ApiConnection"
-                                }
-                            },
-                            "foreach": "@outputs('Parse_JSON')?['body']?['data']",
-                            "runAfter": { "Parse_JSON": [ "Succeeded" ] },
-                            "type": "Foreach"
-                        },
-                        "HTTP": {
+                    "contentVersion": "1.0.0.0",
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
                             "inputs": {
-                                "method": "GET",
-                                // URI boşlukları temizlendi ve runtimeDateExpression kullanıldı
-                                "uri": "[concat('https://platform.socradar.com/api/company/',parameters('socradarCompanyId'),'/incidents/v4?key=',parameters('socradarCompanyKey'),'&start_date=',variables('runtimeDateExpression'))]"
-                            },
-                            "runAfter": {},
-                            "type": "Http"
-                        },
-                        "Parse_JSON": {
-                            "inputs": {
-                                "content": "@body('HTTP')",
                                 "schema": {
+                                    "type": "object",
                                     "properties": {
                                         "data": {
+                                            "type": "array",
                                             "items": {
+                                                "type": "object",
                                                 "properties": {
-                                                    "alarm_asset": { "type": ["string", "null"] },
-                                                    "alarm_assignees": { "type": "array" },
-                                                    "alarm_id": { "type": "integer" },
-                                                    "alarm_related_assets": { "type": "array" },
-                                                    "alarm_related_entities": { "type": "array" },
-                                                    "alarm_response": { "type": ["string", "null"] },
                                                     "alarm_risk_level": { "type": "string" },
                                                     "alarm_text": { "type": "string" },
+                                                    "alarm_id": { "type": "integer" },
                                                     "alarm_type_details": {
+                                                        "type": "object",
                                                         "properties": {
-                                                            "alarm_compliance_list": { "type": "array" },
-                                                            "alarm_default_mitigation_plan": { "type": ["string", "null"] },
-                                                            "alarm_default_risk_level": { "type": "string" },
-                                                            "alarm_detection_and_analysis": { "type": ["string", "null"] },
-                                                            "alarm_generic_title": { "type": "string" },
-                                                            "alarm_main_type": { "type": "string" },
-                                                            "alarm_post_incident_analysis": { "type": ["string", "null"] },
-                                                            "alarm_sub_type": { "type": "string" }
-                                                        },
-                                                        "type": "object"
+                                                            "alarm_generic_title": { "type": "string" }
+                                                        }
                                                     },
-                                                    "approved_by": { "type": ["string", "null"] },
-                                                    "content": { "type": ["object", "null"] },
+                                                    "alarm_asset": { "type": "string" },
+                                                    "alarm_assignees": { "type": "array" },
+                                                    "alarm_related_assets": { "type": "array" },
+                                                    "alarm_related_entities": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "key": { "type": "string" },
+                                                                "value": { "type": "string" }
+                                                            }
+                                                        }
+                                                    },
+                                                    "alarm_response": { "type": "string" },
+                                                    "approved_by": {},
+                                                    "content": { "type": "object" },
                                                     "date": { "type": "string" },
                                                     "extra": { "type": "array" },
                                                     "history": { "type": "array" },
                                                     "is_approved": { "type": "boolean" },
-                                                    // NULL Hatalarını çözen düzeltme:
-                                                    "last_notification_date": { "type": ["string", "null"] },
+                                                    "last_notification_date": { "type": "string" },
                                                     "notes": { "type": "array" },
                                                     "notification_id": { "type": "integer" },
                                                     "status": { "type": "string" },
                                                     "tags": { "type": "array" }
-                                                },
-                                                "required": [
-                                                    "alarm_id",
-                                                    "alarm_risk_level",
-                                                    "alarm_text",
-                                                    "alarm_type_details",
-                                                    "date",
-                                                    "is_approved",
-                                                    "notification_id",
-                                                    "status"
-                                                ],
-                                                "type": "object"
-                                            },
-                                            "type": "array"
+                                                }
+                                            }
                                         },
                                         "is_success": { "type": "boolean" },
                                         "message": { "type": "string" },
                                         "response_code": { "type": "integer" }
-                                    },
-                                    "type": "object"
+                                    }
                                 }
-                            },
-                            "runAfter": { "HTTP": [ "Succeeded" ] },
-                            "type": "ParseJson"
+                            }
                         }
                     },
-                    "contentVersion": "1.0.0.0",
+                    "actions": {
+                        "Create_incident": {
+                            "runAfter": {},
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')[parameters('sentinelConnectionName')]['connectionId']"
+                                    }
+                                },
+                                "method": "put",
+                                "path": "[concat('/Incidents/subscriptions/', parameters('sentinelWorkspaceSubscriptionId'), '/resourceGroups/', parameters('sentinelWorkspaceResourceGroup'), '/workspaces/', parameters('sentinelWorkspaceName'))]",
+                                "body": {
+                                    "title": "@concat(coalesce(triggerBody()?['data'][0]?['alarm_type_details']?['alarm_generic_title'], 'Untitled Alarm'), ' ', coalesce(string(triggerBody()?['data'][0]?['alarm_id']), ''))",
+                                    "severity": "@coalesce(triggerBody()?['data'][0]?['alarm_risk_level'], 'Medium')",
+                                    "status": "New",
+                                    "description": "@coalesce(triggerBody()?['data'][0]?['alarm_text'], 'No detailed alarm text provided.')"
+                                }
+                            }
+                        },
+                        "Response": {
+                            "runAfter": { "Create_incident": ["Succeeded"] },
+                            "type": "Response",
+                            "inputs": {
+                                "statusCode": 200,
+                                "body": { "result": "Event processed successfully." }
+                            }
+                        }
+                    },
                     "outputs": {},
-                    "parameters": { "$connections": { "defaultValue": {}, "type": "Object" } },
-                    "triggers": { "Recurrence": { "evaluatedRecurrence": { "frequency": "Minute", "interval": 3 }, "recurrence": { "frequency": "Minute", "interval": 3 }, "type": "Recurrence" } }
+                    "parameters": {
+                        "$connections": {
+                            "type": "Object",
+                            "defaultValue": {}
+                        }
+                    }
                 },
                 "parameters": {
                     "$connections": {
                         "value": {
-                            "azuresentinel": {
-                                "connectionId": "[variables('azureSentinelConnectionId')]",
-                                "connectionName": "[parameters('azuresentinelConnectionName')]",
-                                "id": "[variables('azureSentinelManagedApiId')]"
+                            "[parameters('sentinelConnectionName')]": {
+                                "connectionId": "[variables('connectionId')]",
+                                "connectionName": "[parameters('sentinelConnectionName')]",
+                                "id": "[variables('apiServiceId')]"
                             }
                         }
                     }
