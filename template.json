@@ -39,11 +39,7 @@
       "contentVersion": "1.0.0.0",
       "triggers": {
         "manual": {
-          "type": "Http",
-          "recurrence": {
-            "frequency": "Day", 
-            "interval": 1 
-          }, // Hata Giderme Eklentisi: Minimum recurrence ayarları eklendi.
+          "type": "Http", // Sadece HTTP tetikleyicisini bırakıyoruz
           "inputs": {
             "schema": {
               "properties": {
@@ -203,7 +199,7 @@
     },
     {
       "type": "Microsoft.Logic/workflows",
-      "apiVersion": "2017-07-01",
+      "apiVersion": "2019-06-01", // API Sürümü Güncellendi
       "name": "[parameters('logicAppName')]",
       "location": "[parameters('location')]",
       "dependsOn": [
