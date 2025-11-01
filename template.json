@@ -13,23 +13,23 @@
       "type": "string",
       "defaultValue": "[resourceGroup().location]",
       "metadata": {
-        "description": "The location for the Logic App and API connections."
+        "description": "The location for the Logic App."
       }
     },
-    "azureSentinelConnectionName": {
+    "sentinelWorkspaceName": {
       "type": "string",
-      "defaultValue": "azuresentinel-webhook-1",
       "metadata": {
-        "description": "The name for the Azure Sentinel API connection."
+        "description": "Name of your Sentinel workspace"
       }
     },
-    "azureSentinelConnectionResourceId": {
+    "sentinelResourceGroup": {
       "type": "string",
-      "defaultValue": "/subscriptions/6fc315b1-e624-4ca1-9d8c-288b264ae0a9/providers/Microsoft.Web/locations/northeurope/managedApis/azuresentinel",
+      "defaultValue": "[resourceGroup().name]",
       "metadata": {
-        "description": "The resource ID of the Azure Sentinel managed API. Update the location if needed."
+        "description": "Resource group containing Sentinel workspace"
       }
-    },
+    }
+  },
     "azureSentinelWorkspacePath": {
       "type": "string",
       "defaultValue": "/Incidents/subscriptions/6fc315b1-e624-4ca1-9d8c-288b264ae0a9/resourceGroups/resourceapps/workspaces/sentinelworkspace",
@@ -39,6 +39,9 @@
     }
   },
   "variables": {
+    "azureSentinelConnectionName": "azuresentinel-webhook-1",
+    "azureSentinelConnectionResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', parameters('location'), '/managedApis/azuresentinel')]",
+    "azureSentinelWorkspacePath": "[concat('/Incidents/subscriptions/', subscription().subscriptionId, '/resourceGroups/', parameters('sentinelResourceGroup'), '/workspaces/', parameters('sentinelWorkspaceName'))]",
     "workflowDefinition": {
       "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
       "contentVersion": "1.0.0.0",
