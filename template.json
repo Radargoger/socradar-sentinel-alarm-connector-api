@@ -31,9 +31,9 @@
     }
   },
   "variables": {
-    "azureSentinelConnectionName": "azuresentinel-webhook-1",
-    "azureSentinelConnectionResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', parameters('location'), '/managedApis/azuresentinel')]",
-    "azureSentinelWorkspacePath": "[concat('/Incidents/subscriptions/', subscription().subscriptionId, '/resourceGroups/', parameters('sentinelResourceGroup'), '/workspaces/', parameters('sentinelWorkspaceName'))]",
+    "connectionName": "azuresentinel-webhook-1",
+    "connectionApiId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', parameters('location'), '/managedApis/azuresentinel')]",
+    "sentinelWorkspacePath": "[concat('/Incidents/subscriptions/', subscription().subscriptionId, '/resourceGroups/', parameters('sentinelResourceGroup'), '/workspaces/', parameters('sentinelWorkspaceName'))]",
     "workflowDefinition": {
       "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
       "contentVersion": "1.0.0.0",
@@ -162,7 +162,7 @@
                   "status": "New",
                   "description": "@items('For_each')?['alarm_text']"
                 },
-                "path": "[variables('azureSentinelWorkspacePath')]"
+                "path": "[variables('sentinelWorkspacePath')]"
               }
             }
           },
@@ -183,12 +183,12 @@
     {
       "type": "Microsoft.Web/connections",
       "apiVersion": "2016-06-01",
-      "name": "[variables('azureSentinelConnectionName')]",
+      "name": "[variables('connectionName')]",
       "location": "[parameters('location')]",
       "kind": "V1",
       "properties": {
         "api": {
-          "id": "[variables('azureSentinelConnectionResourceId')]"
+          "id": "[variables('connectionApiId')]"
         },
         "displayName": "AzureSentinel",
         "parameterValues": {
@@ -204,7 +204,7 @@
       "name": "[parameters('logicAppName')]",
       "location": "[parameters('location')]",
       "dependsOn": [
-        "[resourceId('Microsoft.Web/connections', variables('azureSentinelConnectionName'))]"
+        "[resourceId('Microsoft.Web/connections', variables('connectionName'))]"
       ],
       "properties": {
         "state": "Enabled",
@@ -213,9 +213,9 @@
           "$connections": {
             "value": {
               "azuresentinel-webhook-1": {
-                "connectionId": "[resourceId('Microsoft.Web/connections', variables('azureSentinelConnectionName'))]",
-                "connectionName": "[variables('azureSentinelConnectionName')]",
-                "id": "[variables('azureSentinelConnectionResourceId')]"
+                "connectionId": "[resourceId('Microsoft.Web/connections', variables('connectionName'))]",
+                "connectionName": "[variables('connectionName')]",
+                "id": "[variables('connectionApiId')]"
               }
             }
           }
