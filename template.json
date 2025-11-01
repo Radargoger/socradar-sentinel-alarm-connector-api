@@ -40,6 +40,7 @@
       "triggers": {
         "manual": {
           "type": "Http",
+          "recurrence": {}, // Hata Giderme Eklentisi
           "inputs": {
             "schema": {
               "properties": {
