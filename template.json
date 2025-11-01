@@ -31,16 +31,19 @@
     }
   },
   "variables": {
-    "connectionName": "azuresentinel-webhook-1",
-    "connectionApiId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', parameters('location'), '/managedApis/azuresentinel')]",
-    "sentinelWorkspacePath": "[concat('/Incidents/subscriptions/', subscription().subscriptionId, '/resourceGroups/', parameters('sentinelResourceGroup'), '/workspaces/', parameters('sentinelWorkspaceName'))]",
+    "azureSentinelConnectionName": "azuresentinel-webhook-1",
+    "azureSentinelConnectionResourceId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', parameters('location'), '/managedApis/azuresentinel')]",
+    "azureSentinelWorkspacePath": "[concat('/Incidents/subscriptions/', subscription().subscriptionId, '/resourceGroups/', parameters('sentinelResourceGroup'), '/workspaces/', parameters('sentinelWorkspaceName'))]",
     "workflowDefinition": {
       "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
       "contentVersion": "1.0.0.0",
       "triggers": {
         "manual": {
           "type": "Http",
-          "recurrence": {}, // Hata Giderme Eklentisi
+          "recurrence": {
+            "frequency": "Day", 
+            "interval": 1 
+          }, // Hata Giderme Eklentisi: Minimum recurrence ayarları eklendi.
           "inputs": {
             "schema": {
               "properties": {
