@@ -6,7 +6,7 @@ This Azure Logic App solution automates the integration of security events from 
 
 Click the **Deploy to Azure** button below to deploy the Logic App, its necessary API Connection, and configure all parameters in a single step via the Azure Portal.
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https://raw.githubusercontent.com/Radargoger/socradar-sentinel-alarm-connector-api/refs/heads/main/template.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FRadargoger%2Fsocradar-sentinel-alarm-connector-api%2Fmain%2Ftemplate.json)
 
 ## Solution Architecture & Functionality
 
